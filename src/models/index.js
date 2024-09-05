@@ -24,5 +24,7 @@ module.exports = {
   db: sequelize,
   users,
   restaurants: restaurantsCollection,
-  menus: menusCollection
+  menus: menusCollection,
+  restaurantsModel, // Export the raw Sequelize models
+  menusModel
 };

@@ -10,12 +10,13 @@ const v2Router = express.Router();
 v2Router.param('model', (req, res, next) => {
   const modelName = req.params.model;
   if (dataModules[modelName]) {
-    req.model = dataModules[modelName];
+    req.model = dataModules[modelName].model || dataModules[modelName];  // Access the raw Sequelize model
     next();
   } else {
     next('Invalid Model');
   }
 });
+
 
 v2Router.get('/:model', bearerAuth, permissions('read'),handleGetAll);
 v2Router.get('/:model/:id', bearerAuth, permissions('read'), handleGetOne);
@@ -36,21 +37,24 @@ async function handleGetAll(req, res) {
 async function handleGetOne(req, res) {
   const id = req.params.id;
   try {
-    const options = buildIncludeOptions(req.model.name);
-    let theRecord = await req.model.get(id, options);
-    if (theRecord) {
-      res.status(200).json(theRecord);
+    const restaurant = await req.model.findByPk(id, {
+      include: [{ model: dataModules['menusModel'] }]
+    });
+    
+    if (restaurant) {
+      res.status(200).json(restaurant);
     } else {
-      res.status(404).json({ message: 'Record not found' });
+      res.status(404).json({ message: 'Restaurant not found' });
     }
   } catch (err) {
-    res.status(500).json({ message: 'Error fetching record', error: err });
+    res.status(500).json({ message: 'Error fetching record', error: err.message });
   }
 }
 
+
 function buildIncludeOptions(modelName) {
-  if (modelName === 'Restaurants') {
-    return { include: { model: dataModules['Menus'] } };
+  if (modelName === 'restaurantsModel') {
+    return { include: { model: dataModules['menusModel'] } };
   }
 }
 
