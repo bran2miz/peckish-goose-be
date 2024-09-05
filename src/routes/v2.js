@@ -1,17 +1,13 @@
 'use strict';
 
 const express = require('express');
-const dataModules = require('../models');
-const acl = require('../auth/middleware/acl.js');
-const bearer = require('../auth/middleware/bearer.js');
+const dataModules = require('../models/index.js');
+const bearerAuth = require('../auth/middleware/bearer.js');
+const permissions = require('../auth/middleware/acl.js');
 
-const router = express.Router();
+const v2Router = express.Router();
 
-function checkAuthorization(capability) {
-  return [bearer, acl(capability)];
-}
-
-router.param('model', (req, res, next) => {
+v2Router.param('model', (req, res, next) => {
   const modelName = req.params.model;
   if (dataModules[modelName]) {
     req.model = dataModules[modelName];
@@ -21,33 +17,42 @@ router.param('model', (req, res, next) => {
   }
 });
 
-// access to bearer to get through the first checkpoint
-router.get('/:model', handleGetAll);
-router.get('/:model/:id', handleGetOne);
-router.post('/:model', checkAuthorization('create'), handleCreate);
-router.put('/:model/:id', checkAuthorization('update'), handleUpdate);
-router.delete('/:model/:id', checkAuthorization('delete'), handleDelete);
+v2Router.get('/:model', bearerAuth, permissions('read'),handleGetAll);
+v2Router.get('/:model/:id', bearerAuth, permissions('read'), handleGetOne);
+v2Router.post('/:model', bearerAuth, permissions('create'), handleCreate);
+v2Router.put('/:model/:id', bearerAuth, permissions('update'), handleUpdate);
+v2Router.delete('/:model/:id', bearerAuth, permissions('delete'), handleDelete);
 
 async function handleGetAll(req, res) {
-  const options = buildIncludeOptions(req.model.name);
-  let allRecords = await req.model.get(null, options);
-  res.status(200).json(allRecords);
+  try {
+    const options = buildIncludeOptions(req.model.name);
+    let allRecords = await req.model.get(null, options);
+    res.status(200).json(allRecords);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching records', error: err });
+  }
 }
 
 async function handleGetOne(req, res) {
   const id = req.params.id;
-  const options = buildIncludeOptions(req.model.name);
-  let theRecord = await req.model.get(id, options);
-  res.status(200).json(theRecord);
+  try {
+    const options = buildIncludeOptions(req.model.name);
+    let theRecord = await req.model.get(id, options);
+    if (theRecord) {
+      res.status(200).json(theRecord);
+    } else {
+      res.status(404).json({ message: 'Record not found' });
+    }
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching record', error: err });
+  }
 }
 
 function buildIncludeOptions(modelName) {
   if (modelName === 'Restaurants') {
     return { include: { model: dataModules['Menus'] } };
   }
-  return {};
 }
-
 
 async function handleCreate(req, res) {
   let obj = req.body;
@@ -68,4 +73,4 @@ async function handleDelete(req, res) {
   res.status(200).json(deletedRecord);
 }
 
-module.exports = router;
+module.exports = v2Router;

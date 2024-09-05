@@ -1,10 +1,10 @@
 'use strict';
 
 const menusModel = (sequelize, DataTypes) => sequelize.define('Menus', {
-  itemName: { type: DataTypes.STRING, required: true },
-  itemDescription: { type: DataTypes.STRING, required: true },
-  itemRating: { type: DataTypes.INTEGER, required: true },
-  itemReview: { type: DataTypes.STRING, required: true },
+  itemName: { type: DataTypes.STRING, allowNull: false },
+  itemDescription: { type: DataTypes.STRING, allowNull: false },
+  itemRating: { type: DataTypes.INTEGER, allowNull: false },
+  itemReview: { type: DataTypes.STRING, allowNull: false },
   restaurantId: {
     type: DataTypes.INTEGER,
     allowNull: false
