@@ -5,7 +5,8 @@ module.exports = (capability) => (req, res, next) => {
     if (req.user.capabilities.includes(capability)) {
       next();
     } else {
-      next('Access Denied');
+      console.error('Access Denied: User lacks capability', capability);
+      next('Access Denied: You do not have the required capability');
     }
   } catch (e) {
     next('Invalid Login, (acl middleware)');
