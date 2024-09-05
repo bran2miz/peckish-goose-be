@@ -7,17 +7,19 @@ const permissions = require('../auth/middleware/acl.js');
 
 const v2Router = express.Router();
 
+//Assign correct model to the request model based on the URL parameter :model.
 v2Router.param('model', (req, res, next) => {
   const modelName = req.params.model;
   if (dataModules[modelName]) {
     req.model = dataModules[modelName].model || dataModules[modelName];  // Access the raw Sequelize model
+    // ie : If the model parameter is restaurants, req.model is set to restaurantsModel
     next();
   } else {
     next('Invalid Model');
   }
 });
 
-
+// CRUD operations but must pass through token authetnication and ACL.
 v2Router.get('/:model', bearerAuth, permissions('read'),handleGetAll);
 v2Router.get('/:model/:id', bearerAuth, permissions('read'), handleGetOne);
 v2Router.post('/:model', bearerAuth, permissions('create'), handleCreate);
@@ -34,9 +36,12 @@ async function handleGetAll(req, res) {
   }
 }
 
+// find by the id 
 async function handleGetOne(req, res) {
+  // req.params: { model: 'restaurants', id: '1' }
   const id = req.params.id;
   try {
+    // find by primary key
     const restaurant = await req.model.findByPk(id, {
       include: [{ model: dataModules['menusModel'] }]
     });

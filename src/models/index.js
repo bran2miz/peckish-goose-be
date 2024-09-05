@@ -14,9 +14,11 @@ const menusModel= menusSchema(sequelize, DataTypes);
 const restaurantsModel = restaurantsSchema(sequelize, DataTypes);
 const users = userModel(sequelize, DataTypes);
 
+// Relationship between two models using Sequelize
 restaurantsModel.hasMany(menusModel, {foreignKey: 'restaurantId', sourceKey:'id'});
 menusModel.belongsTo(restaurantsModel, {foreignKey: 'restaurantId', targetKey: 'id'})
 
+// create new collections
 const restaurantsCollection = new Collection(restaurantsModel);
 const menusCollection = new Collection(menusModel);
 
@@ -25,6 +27,8 @@ module.exports = {
   users,
   restaurants: restaurantsCollection,
   menus: menusCollection,
-  restaurantsModel, // Export the raw Sequelize models
+  restaurantsModel, 
+  // Export the raw Sequelize models because Collection instance only provide access to basic CRUD operations. 
+  // Does not include built-in methods like findByPk, include, or associations. 
   menusModel
 };
