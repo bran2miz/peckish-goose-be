@@ -17,10 +17,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.7.7",
     "base-64": "^1.0.0",
     "bcrypt": "^5.0.0",
     "cors": "^2.8.5",
-    "dotenv": "^8.2.0",
+    "dotenv": "^8.6.0",
     "eslint": "^8.29.0",
     "express": "^4.17.1",
     "jest": "^26.6.3",
@@ -29,6 +30,7 @@
     "sequelize": "^6.6.2",
     "sequelize-cli": "^6.2.0",
     "sqlite3": "^5.0.2",
-    "supertest": "^6.3.3"
+    "supertest": "^6.3.3",
+    "yelp-fusion": "^3.0.0"
   }
 }
