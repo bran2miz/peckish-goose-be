@@ -8,10 +8,11 @@ const router = express.Router();
 router.param("model", (req, res, next) => {
   const modelName = req.params.model;
   if (dataModules[modelName]) {
-    req.model = dataModules[modelName];
+    req.model = dataModules[modelName].model || dataModules[modelName];  // Access the raw Sequelize model
+    // ie : If the model parameter is restaurants, req.model is set to restaurantsModel
     next();
   } else {
-    next("Invalid Model");
+    next('Invalid Model');
   }
 });
 
@@ -22,14 +23,42 @@ router.put("/:model/:id", handleUpdate);
 router.delete("/:model/:id", handleDelete);
 
 async function handleGetAll(req, res) {
-  let allRecords = await req.model.get();
-  res.status(200).json(allRecords);
+  try {
+    const options = buildIncludeOptions(req.model.name);
+    let allRecords = await req.model.findAll(options);
+    res.status(200).json(allRecords);
+  } catch (err) {
+    console.error('Error fetching records:', err);
+    res.status(500).json({ message: 'Error fetching records', error: err.message });
+  }
+  
 }
 
+// find by the id 
 async function handleGetOne(req, res) {
+  // req.params: { model: 'restaurants', id: '1' }
   const id = req.params.id;
-  let theRecord = await req.model.get(id);
-  res.status(200).json(theRecord);
+  try {
+    // find by primary key
+    const restaurant = await req.model.findByPk(id, {
+      include: [{ model: dataModules['menusModel'] }]
+    });
+    
+    if (restaurant) {
+      res.status(200).json(restaurant);
+    } else {
+      res.status(404).json({ message: 'Restaurant not found' });
+    }
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching record', error: err.message });
+  }
+}
+
+
+function buildIncludeOptions(modelName) {
+  if (modelName === 'restaurantsModel') {
+    return { include: { model: dataModules['menusModel'] } };
+  }
 }
 
 async function handleCreate(req, res) {
@@ -46,9 +75,7 @@ async function handleUpdate(req, res) {
 }
 
 async function handleDelete(req, res) {
-  let id = req.params.id;
-  let deletedRecord = await req.model.delete(id);
+  const id = req.params.id;
+  let deletedRecord = await req.model.destroy({ where: { id } });
   res.status(200).json(deletedRecord);
 }
-
-module.exports = router;

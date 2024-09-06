@@ -29,11 +29,13 @@ v2Router.delete('/:model/:id', bearerAuth, permissions('delete'), handleDelete);
 async function handleGetAll(req, res) {
   try {
     const options = buildIncludeOptions(req.model.name);
-    let allRecords = await req.model.get(null, options);
+    let allRecords = await req.model.findAll(options);
     res.status(200).json(allRecords);
   } catch (err) {
-    res.status(500).json({ message: 'Error fetching records', error: err });
+    console.error('Error fetching records:', err);
+    res.status(500).json({ message: 'Error fetching records', error: err.message });
   }
+  
 }
 
 // find by the id 
@@ -77,9 +79,10 @@ async function handleUpdate(req, res) {
 }
 
 async function handleDelete(req, res) {
-  let id = req.params.id;
-  let deletedRecord = await req.model.delete(id);
+  const id = req.params.id;
+  let deletedRecord = await req.model.destroy({ where: { id } });
   res.status(200).json(deletedRecord);
 }
+
 
 module.exports = v2Router;

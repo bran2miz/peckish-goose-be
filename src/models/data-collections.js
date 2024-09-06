@@ -10,12 +10,11 @@ class DataCollection {
     this.model = model;
   }
 
-  get(id) {
+  get(id = null, options = {}) {
     if (id) {
-      return this.model.findOne({ where: { id } });
-    }
-    else {
-      return this.model.findAll({});
+      return this.model.findByPk(id, options);
+    } else {
+      return this.model.findAll(options);
     }
   }
 
@@ -23,13 +22,12 @@ class DataCollection {
     return this.model.create(record);
   }
 
-  update(id, data) {
-    return this.model.findOne({ where: { id } })
-      .then(record => record.update(data));
+  update(id, obj) {
+    return this.model.update(obj, { where: { id }, returning: true });
   }
 
   delete(id) {
-    return this.model.destroy({ where: { id }});
+    return this.model.destroy({ where: { id } });
   }
 
 }
