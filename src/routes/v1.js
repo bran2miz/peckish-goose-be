@@ -65,7 +65,7 @@ v1Router.delete('/restaurants/:restaurantId/menus/:id', handleMenuDelete);
 
 // Main function to handle fetching from DB or Yelp API if not found
 async function handleGetAll(req, res) {
-  const mood = req.query.mood;  // User input for mood
+  const mood = req.query.mood.toLowerCase(); ;  // User input for mood
   const category = moodToCategory[mood] || 'restaurants';  // Map mood to category
 
   try {
@@ -94,8 +94,8 @@ async function handleGetAll(req, res) {
       // Save Yelp results to DB
       restaurants = await req.model.bulkCreate(yelpRestaurants, { returning: true });
     }
-
-    res.status(200).json(restaurants);
+    const filteredRestaurants = restaurants.filter(restaurant => restaurant.category === category);
+    res.status(200).json(filteredRestaurants);
   } catch (err) {
     console.error('Error fetching records:', err);
     res.status(500).json({ message: 'Error fetching records', error: err.message });
